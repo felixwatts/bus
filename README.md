@@ -1,9 +1,9 @@
 This is a very simple message bus server. It will eventually support PUBLISH/SUBSCRIBE and REQUEST/RESPONSE. It uses a very simple text-based TCP protocol. 
 subscription keys may contain wildcards:
 
-SB 1 stocks/NASDAQ/GOOG/latest			// subscribe to key 'stocks/GOOG/latest'
-SB 2 stocks/NASDAQ/*/latest			// subscribe to all keys starting with 'stocks/NASDAQ' followed by a single field followed by 'latest'
-PB 3 stocks/**/state closed			// publish 'closed' as the value for all keys starting with 'stocks' and ending with 'state'
+* `SB 1 stocks/NASDAQ/GOOG/latest` subscribe to key 'stocks/GOOG/latest'
+* `SB 2 stocks/NASDAQ/*/latest` subscribe to all keys starting with 'stocks/NASDAQ' followed by a single field followed by 'latest'
+* `PB 3 stocks/**/state closed` publish 'closed' as the value for all keys starting with 'stocks' and ending with 'state'
 
 Eventual Features
 
