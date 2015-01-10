@@ -7,14 +7,16 @@ import (
 )
 
 const (
-	MSG_PART_SEPARATOR = " "
-	KEY_PART_SEPARATOR = "/"
-	KEY_WILDCARD       = "*"
-	KEY_DOUBLE_WILD    = "**"
-	MSG_TYPE_OK        = "OK"
-	MSG_TYPE_SUBSCRIBE = "SB"
-	MSG_TYPE_PUBLISH   = "PB"
-	MSG_TYPE_FAIL      = "FL"
+	MSG_PART_SEPARATOR   = " "
+	KEY_PART_SEPARATOR   = "/"
+	KEY_WILDCARD         = "*"
+	KEY_DOUBLE_WILD      = "**"
+	MSG_TYPE_OK          = "OK"
+	MSG_TYPE_SUBSCRIBE   = "SB"
+	MSG_TYPE_PUBLISH     = "PB"
+	MSG_TYPE_FAIL        = "FL"
+	MSG_TYPE_UNSUBSCRIBE = "US"
+	MSG_TYPE_CLAIM       = "CL"
 )
 
 type message struct {

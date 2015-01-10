@@ -4,82 +4,111 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"net"
 )
 
+type Client interface {
+	Stop()
+	Subscribe(key string) (string, error)
+	Unsubscribe(key string) (string, error)
+	Publish(key string, val string) (string, error)
+	Rxc() <-chan string
+}
+
 type client struct {
-	id     int
-	server *server
-	conn   net.Conn
-	sendc  chan (string)
-	recvc  chan (string)
-	closec chan (bool)
+	conn net.Conn
+	rxc  chan string
+	rqId int
 }
 
-func newClient(conn net.Conn, id int, server *server) *client {
-	client := &client{
-		id:     id,
-		server: server,
-		conn:   conn,
-		sendc:  make(chan (string), 32),
-		recvc:  make(chan (string), 32),
-		closec: make(chan (bool)),
+func (c *client) requestId() string {
+	c.rqId++
+	return fmt.Sprintf("%v", c.rqId)
+}
+
+func (c *client) Rxc() <-chan string {
+	return c.rxc
+}
+
+func (c *client) Subscribe(keyStr string) (string, error) {
+	key, err := parseKey(keyStr)
+	if err != nil {
+		return "", err
 	}
 
-	go client.run()
-	go client.listen()
-
-	return client
-}
-
-func (client *client) run() {
-
-	defer client.close()
-
-	for {
-		select {
-		case message := <-client.sendc:
-			client.log(fmt.Sprintf("TX %v", message))
-			_, err := io.WriteString(client.conn, message)
-			if err != nil {
-				client.log(err)
-				return
-			}
-			break
-		case <-client.closec:
-			return
-		}
+	msg := message{
+		meaning:   MSG_TYPE_SUBSCRIBE,
+		requestId: c.requestId(),
+		key:       key,
 	}
 
+	_, err = io.WriteString(c.conn, msg.String())
+	if err != nil {
+		return "", err
+	}
+
+	return msg.requestId, nil
 }
 
-func (client *client) send(message string) {
-	client.sendc <- message
+func (c *client) Unsubscribe(keyStr string) (string, error) {
+	key, err := parseKey(keyStr)
+	if err != nil {
+		return "", err
+	}
+
+	msg := message{
+		meaning:   MSG_TYPE_UNSUBSCRIBE,
+		requestId: c.requestId(),
+		key:       key,
+	}
+
+	_, err = io.WriteString(c.conn, msg.String())
+	if err != nil {
+		return "", err
+	}
+
+	return msg.requestId, nil
 }
 
-func (client *client) sendOK(requestId string) {
-	client.send(message{meaning: MSG_TYPE_OK, requestId: requestId}.String())
+func (c *client) Publish(keyStr string, val string) (string, error) {
+	key, err := parseKey(keyStr)
+	if err != nil {
+		return "", err
+	}
+
+	msg := message{
+		meaning:   MSG_TYPE_PUBLISH,
+		requestId: c.requestId(),
+		key:       key,
+		val:       val,
+	}
+
+	_, err = io.WriteString(c.conn, msg.String())
+	if err != nil {
+		return "", err
+	}
+
+	return msg.requestId, nil
 }
 
-func (client *client) sendFail(requestId string) {
-	client.send(message{meaning: MSG_TYPE_FAIL, requestId: requestId}.String())
+func Dial(addr string) (Client, error) {
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &client{
+		conn: conn,
+		rxc:  make(chan (string), 32),
+	}
+
+	go readUntilStop(c)
+
+	return c, nil
 }
 
-func (client *client) close() {
-	client.log("Closing")
-	client.server.removeClient(client)
-	client.conn.Close()
-}
-
-func (client *client) listen() {
-
-	defer client.log("End listen")
-
-	client.log("Listening")
-
-	scanner := bufio.NewScanner(client.conn)
-
+func readUntilStop(c *client) {
+	scanner := bufio.NewScanner(c.conn)
 	for {
 		more := scanner.Scan()
 
@@ -87,17 +116,16 @@ func (client *client) listen() {
 			break
 		}
 
-		client.log(fmt.Sprintf("RX [%v]", scanner.Text()))
+		msg, err := parseMessage(scanner.Text())
 
-		request := request{
-			scanner.Text(),
-			client,
+		if err != nil {
+			panic(err)
 		}
 
-		client.server.requestc <- request
+		c.rxc <- msg.String()
 	}
 }
 
-func (client *client) log(data interface{}) {
-	log.Printf("[CLIENT #%v] %v", client.id, data)
+func (c *client) Stop() {
+	c.conn.Close()
 }

@@ -7,214 +7,105 @@ import (
 
 var subject *keyTree
 
-func Test1(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key, _ := parseKey("a")
-
-	subject.subscribe(client1, key)
-	subject.publish(key, "msg", false)
-
-	client1.assertReceives("msg", t)
-}
-
 func Test2(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-	client2 := mockClient(2)
-
-	key, _ := parseKey("a")
-
-	subject.subscribe(client1, key)
-	subject.subscribe(client2, key)
-	subject.publish(key, "msg", false)
-
-	client1.assertReceives("msg", t)
-	client2.assertReceives("msg", t)
+	assertKeysMatch("a", "a", true, t)
 }
 
 func Test3(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-	client2 := mockClient(2)
-
-	key1, _ := parseKey("a")
-	key2, _ := parseKey("b")
-
-	subject.subscribe(client1, key1)
-	subject.subscribe(client2, key2)
-	subject.publish(key1, "msg", false)
-
-	client1.assertReceives("msg", t)
-	client2.assertReceivesNothing(t)
+	assertKeysMatch("a", "b", false, t)
 }
 
 func Test4(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key, _ := parseKey("a/b")
-
-	subject.subscribe(client1, key)
-	subject.publish(key, "msg", false)
-
-	client1.assertReceives("msg", t)
+	assertKeysMatch("a/b", "a/b", true, t)
 }
 
 func Test5(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("a/*")
-	key2, _ := parseKey("a/b")
-
-	subject.subscribe(client1, key1)
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceives("msg", t)
+	assertKeysMatch("a/*", "a/b", true, t)
 }
 
 func Test6(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("*/b")
-	key2, _ := parseKey("a/b")
-
-	subject.subscribe(client1, key1)
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceives("msg", t)
+	assertKeysMatch("*/b", "a/b", true, t)
 }
 
 func Test7(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("*/c")
-	key2, _ := parseKey("a/b")
-
-	subject.subscribe(client1, key1)
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceivesNothing(t)
+	assertKeysMatch("*/c", "a/b", false, t)
 }
 
 func Test8(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("c/b")
-	key2, _ := parseKey("a/b")
-
-	subject.subscribe(client1, key1)
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceivesNothing(t)
+	assertKeysMatch("c/b", "a/b", false, t)
 }
 
 func Test9(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("a/**")
-	key2, _ := parseKey("a/b/c")
-
-	subject.subscribe(client1, key1)
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceives("msg", t)
+	assertKeysMatch("a/**", "a/b/c", true, t)
 }
 
 func Test10(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("a/**/d")
-	key2, _ := parseKey("a/b/c/d")
-
-	subject.subscribe(client1, key1)
-
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceives("msg", t)
+	assertKeysMatch("a/**/d", "a/b/c/d", true, t)
 }
 
 func Test11(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("a/**/d")
-	key2, _ := parseKey("a/b/c/d/e")
-
-	subject.subscribe(client1, key1)
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceivesNothing(t)
+	assertKeysMatch("a/**/d", "a/b/c/d/e", false, t)
 }
 
 func Test12(t *testing.T) {
-
-	subject = newKeyTree()
-
-	client1 := mockClient(1)
-
-	key1, _ := parseKey("a/**/d/*")
-	key2, _ := parseKey("a/b/c/d/e")
-
-	subject.subscribe(client1, key1)
-	subject.publish(key2, "msg", false)
-
-	client1.assertReceives("msg", t)
+	assertKeysMatch("a/**/d/*", "a/b/c/d/e", true, t)
 }
 
 func Test13(t *testing.T) {
+	assertKeysMatch("a/**/d/f", "a/b/c/d/e", false, t)
+}
 
+func Test14(t *testing.T) {
+	assertKeysMatch("a", "*", true, t)
+}
+
+func Test15(t *testing.T) {
+	assertKeysMatch("a/b", "*", false, t)
+}
+
+func Test16(t *testing.T) {
+	assertKeysMatch("a/b", "a/*", true, t)
+}
+
+func Test17(t *testing.T) {
+	assertKeysMatch("a/b", "*/b", true, t)
+}
+
+func Test18(t *testing.T) {
+	assertKeysMatch("a/b", "*/c", false, t)
+}
+
+func Test19(t *testing.T) {
+	assertKeysMatch("a/b", "*/*", true, t)
+}
+
+func assertKeysMatch(subKey string, pubKey string, match bool, t *testing.T) {
 	subject = newKeyTree()
 
 	client1 := mockClient(1)
 
-	key1, _ := parseKey("a/**/d/f")
-	key2, _ := parseKey("a/b/c/d/e")
+	key1, _ := parseKey(subKey)
+	key2, _ := parseKey(pubKey)
 
 	subject.subscribe(client1, key1)
 	subject.publish(key2, "msg", false)
 
-	client1.assertReceivesNothing(t)
+	if match {
+		client1.assertReceives("msg", t)
+	} else {
+		client1.assertReceivesNothing(t)
+	}
 }
 
-func mockClient(id int) *client {
-	client := &client{
+func mockClient(id int) *clientHandler {
+	client := &clientHandler{
 		id:    id,
 		sendc: make(chan (string), 32),
 	}
 	return client
 }
 
-func (client *client) assertReceives(msg string, t *testing.T) {
+func (client *clientHandler) assertReceives(msg string, t *testing.T) {
 	select {
 	case actual := <-client.sendc:
 		if actual != msg {
@@ -227,7 +118,7 @@ func (client *client) assertReceives(msg string, t *testing.T) {
 	}
 }
 
-func (client *client) assertReceivesNothing(t *testing.T) {
+func (client *clientHandler) assertReceivesNothing(t *testing.T) {
 	select {
 	case actual := <-client.sendc:
 		t.Errorf("#%v expected nothing got %v", client.id, actual)
