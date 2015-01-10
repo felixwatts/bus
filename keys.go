@@ -83,6 +83,8 @@ func (keyTree *keyTree) publish(key key, msg string, doubleWild bool) {
 		return
 	}
 
+	//doubleWild = doubleWild || key[0] == KEY_DOUBLE_WILD
+
 	if doubleWild {
 
 		keyTree.publish(key[1:], msg, true)

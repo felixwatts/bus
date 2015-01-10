@@ -79,6 +79,26 @@ func Test19(t *testing.T) {
 	assertKeysMatch("a/b", "*/*", true, t)
 }
 
+func Test20(t *testing.T) {
+	assertKeysMatch("*", "*", true, t)
+}
+
+func Test21(t *testing.T) {
+	assertKeysMatch("*/b", "*/b", true, t)
+}
+
+func Test22(t *testing.T) {
+	assertKeysMatch("a/*", "*/b", true, t)
+}
+
+func Test23(t *testing.T) {
+	assertKeysMatch("*/b", "a/*", true, t)
+}
+
+func Test24(t *testing.T) {
+	assertKeysMatch("*/*", "*/*", true, t)
+}
+
 func assertKeysMatch(subKey string, pubKey string, match bool, t *testing.T) {
 	subject = newKeyTree()
 
