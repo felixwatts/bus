@@ -99,6 +99,46 @@ func Test24(t *testing.T) {
 	assertKeysMatch("*/*", "*/*", true, t)
 }
 
+func Test25(t *testing.T) {
+	assertKeysMatch("a", "**", true, t)
+}
+
+func Test26(t *testing.T) {
+	assertKeysMatch("a/b/c", "a/**", true, t)
+}
+
+func Test27(t *testing.T) {
+	assertKeysMatch("a/b/c", "a/**/c", true, t)
+}
+
+func Test28(t *testing.T) {
+	assertKeysMatch("a/b/c", "a/**/d", false, t)
+}
+
+func Test29(t *testing.T) {
+	assertKeysMatch("a/b/c/d", "a/**/d", true, t)
+}
+
+func Test30(t *testing.T) {
+	assertKeysMatch("a/*/d", "a/**/d", true, t)
+}
+
+func Test31(t *testing.T) {
+	assertKeysMatch("a/**/d", "a/**/c/d", true, t)
+}
+
+func Test32(t *testing.T) {
+	assertKeysMatch("a/**/c/d", "a/**/d", true, t)
+}
+
+func Test33(t *testing.T) {
+	assertKeysMatch("a/**/c/d", "a/**/c/d", true, t)
+}
+
+func Test34(t *testing.T) {
+	assertKeysMatch("a/b/**/d", "a/**/c/d", true, t)
+}
+
 func assertKeysMatch(subKey string, pubKey string, match bool, t *testing.T) {
 	subject = newKeyTree()
 

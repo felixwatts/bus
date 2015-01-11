@@ -83,7 +83,16 @@ func (keyTree *keyTree) publish(key key, msg string, doubleWild bool) {
 		return
 	}
 
-	//doubleWild = doubleWild || key[0] == KEY_DOUBLE_WILD
+	if key[0] == KEY_DOUBLE_WILD {
+		keyTree.publish(key[1:], msg, doubleWild)
+
+		for _, child := range keyTree.children {
+
+			child.publish(key, msg, doubleWild)
+		}
+
+		return
+	}
 
 	if doubleWild {
 
