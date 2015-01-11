@@ -26,8 +26,6 @@ type message struct {
 	val       string
 }
 
-type key []string
-
 func (message message) String() string {
 	if message.val != "" {
 		return fmt.Sprintf("%v%v%v%v%v%v%v\n", message.meaning, MSG_PART_SEPARATOR, message.requestId, MSG_PART_SEPARATOR, message.key, MSG_PART_SEPARATOR, message.val)
@@ -38,35 +36,6 @@ func (message message) String() string {
 	} else {
 		return fmt.Sprintf("%v\n", message.meaning)
 	}
-}
-
-func (key key) String() string {
-	return strings.Join(key, KEY_PART_SEPARATOR)
-}
-
-func parseKey(keyStr string) (key, error) {
-	keyParts := key(strings.Split(keyStr, KEY_PART_SEPARATOR))
-
-	if len(keyParts) == 0 {
-		return nil, errors.New("Empty key")
-	}
-
-	for _, keyPart := range keyParts {
-
-		if keyPart == KEY_WILDCARD || keyPart == KEY_DOUBLE_WILD {
-			continue
-		}
-
-		if strings.Contains(keyPart, KEY_WILDCARD) {
-			return nil, errors.New("Invalid key: Part contains wildcard.")
-		}
-
-		if len(keyPart) == 0 {
-			return nil, errors.New("Invalid key: Empty part")
-		}
-	}
-
-	return keyParts, nil
 }
 
 func parseMessage(input string) (message, error) {

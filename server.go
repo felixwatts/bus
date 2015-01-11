@@ -101,11 +101,20 @@ func (server *server) handleRequest(request request) {
 		request.client.sendOK(message.requestId)
 		break
 	case MSG_TYPE_CLAIM:
-
+		success := server.hub.claim(request.client, message.key)
+		if success {
+			request.client.sendOK(message.requestId)
+		} else {
+			request.client.sendFail(message.requestId)
+		}
 		break
 	case MSG_TYPE_PUBLISH:
-		server.hub.publish(message.key, message.String())
-		request.client.sendOK(message.requestId)
+		success := server.hub.publish(request.client, message.key, message.String())
+		if success {
+			request.client.sendOK(message.requestId)
+		} else {
+			request.client.sendFail(message.requestId)
+		}
 		break
 	default:
 		server.log(fmt.Sprintf("Unknown message type [%v] from #%v", message.meaning, request.client.id))

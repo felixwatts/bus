@@ -37,8 +37,20 @@ func (hub *hub) unsubscribe(subscriber *clientHandler, key key) {
 	}
 }
 
-func (hub *hub) publish(key key, msg string) {
-	hub.keyTree.publish(key, msg, false)
+func (hub *hub) publish(publisher *clientHandler, key key, msg string) bool {
+
+	subscribers := make(map[*clientHandler]bool)
+	canPublish := hub.keyTree.findSubscribers(key, false, publisher, subscribers)
+
+	if !canPublish {
+		return false
+	}
+
+	for subscriber, _ := range subscribers {
+		subscriber.send(msg)
+	}
+
+	return true
 }
 
 func (hub *hub) deleteSubscriber(subscriber *clientHandler) {
@@ -47,4 +59,8 @@ func (hub *hub) deleteSubscriber(subscriber *clientHandler) {
 	for sub, _ := range subscriptions {
 		delete(sub.subscribers, subscriber)
 	}
+}
+
+func (hub *hub) claim(claimant *clientHandler, key key) bool {
+	return hub.keyTree.claim(claimant, key)
 }

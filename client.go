@@ -12,6 +12,7 @@ type Client interface {
 	Subscribe(key string) (string, error)
 	Unsubscribe(key string) (string, error)
 	Publish(key string, val string) (string, error)
+	Claim(keyStr string) (string, error)
 	Rxc() <-chan string
 }
 
@@ -81,6 +82,26 @@ func (c *client) Publish(keyStr string, val string) (string, error) {
 		requestId: c.requestId(),
 		key:       key,
 		val:       val,
+	}
+
+	_, err = io.WriteString(c.conn, msg.String())
+	if err != nil {
+		return "", err
+	}
+
+	return msg.requestId, nil
+}
+
+func (c *client) Claim(keyStr string) (string, error) {
+	key, err := parseKey(keyStr)
+	if err != nil {
+		return "", err
+	}
+
+	msg := message{
+		meaning:   MSG_TYPE_CLAIM,
+		requestId: c.requestId(),
+		key:       key,
 	}
 
 	_, err = io.WriteString(c.conn, msg.String())
