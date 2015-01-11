@@ -5,7 +5,7 @@ subscription keys may contain wildcards:
 * `SB 2 stocks/NASDAQ/*/latest` subscribe to all keys starting with 'stocks/NASDAQ' followed by a single field followed by 'latest'
 * `PB 3 stocks/**/state closed` publish 'closed' as the value for all keys starting with 'stocks' and ending with 'state'
 
-Eventual Features
+Implemented Features
 
 - Subscribe to a key
 - Wildcards in subscription keys
@@ -13,8 +13,10 @@ Eventual Features
 - Publish to a key
 - Wildcards in publish keys
 - Double wildcards in publish keys
-- Publisher can CLAIM an area of the keyspace. This means no one else can claim it or publish to it and the publisher gets informed when subscribers
-	subscribe within its space
+- Publisher can CLAIM an area of the keyspace. This means no one else can claim it or publish to it and the publisher gets informed when subscribers subscribe within its space
+
+Future Features
+
 - Register as a METHOD provider
 - Request a method and get a response
 
