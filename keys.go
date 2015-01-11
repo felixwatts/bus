@@ -2,13 +2,13 @@ package bus
 
 type keyTree struct {
 	children    map[string]*keyTree
-	subscribers map[*clientHandler]int
+	subscribers map[*clientHandler]bool
 }
 
 func newKeyTree() *keyTree {
 	return &keyTree{
 		children:    make(map[string]*keyTree),
-		subscribers: make(map[*clientHandler]int),
+		subscribers: make(map[*clientHandler]bool),
 	}
 }
 
@@ -37,12 +37,17 @@ func overlaps(k1 key, k2 key, k1Doublewild bool, k2Doublewild bool) bool {
 	return false
 }
 
-func (keyTree *keyTree) subscribe(subscriber *clientHandler, key key) {
+func (keyTree *keyTree) subscribe(subscriber *clientHandler, key key) *keyTree {
 	if len(key) == 0 {
-		num, _ := keyTree.subscribers[subscriber]
-		num++
-		keyTree.subscribers[subscriber] = num
-		return
+		_, alreadySubscribed := keyTree.subscribers[subscriber]
+
+		keyTree.subscribers[subscriber] = true
+
+		if !alreadySubscribed {
+			return keyTree
+		}
+
+		return nil
 	}
 
 	child, found := keyTree.children[key[0]]
@@ -51,26 +56,27 @@ func (keyTree *keyTree) subscribe(subscriber *clientHandler, key key) {
 		keyTree.children[key[0]] = child
 	}
 
-	child.subscribe(subscriber, key[1:])
+	return child.subscribe(subscriber, key[1:])
 }
 
-func (keyTree *keyTree) unsubscribe(subscriber *clientHandler, key key) {
+func (keyTree *keyTree) unsubscribe(subscriber *clientHandler, key key) *keyTree {
 	if len(key) == 0 {
-		num, _ := keyTree.subscribers[subscriber]
-		num--
-		keyTree.subscribers[subscriber] = num
+		_, isSubscribed := keyTree.subscribers[subscriber]
 
-		if num == 0 {
+		if isSubscribed {
 			delete(keyTree.subscribers, subscriber)
+			return keyTree
 		}
 
-		return
+		return nil
 	}
 
 	child, found := keyTree.children[key[0]]
 	if found {
-		child.unsubscribe(subscriber, key[1:])
+		return child.unsubscribe(subscriber, key[1:])
 	}
+
+	return nil
 }
 
 func (keyTree *keyTree) publish(key key, msg string, doubleWild bool) {

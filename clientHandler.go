@@ -68,12 +68,12 @@ func (clientHandler *clientHandler) sendFail(requestId string) {
 
 func (clientHandler *clientHandler) close() {
 	clientHandler.log("Closing")
-	clientHandler.server.removeClient(clientHandler)
 	clientHandler.conn.Close()
 }
 
 func (clientHandler *clientHandler) listen() {
 
+	defer clientHandler.server.removeClient(clientHandler)
 	defer clientHandler.log("End listen")
 
 	clientHandler.log("Listening")

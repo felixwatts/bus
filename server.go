@@ -16,12 +16,12 @@ type request struct {
 }
 
 type server struct {
-	nextClientId  int
-	ln            net.Listener
-	clients       map[int]*clientHandler
-	requestc      chan (request)
-	closec        chan (bool)
-	subscriptions *keyTree
+	nextClientId int
+	ln           net.Listener
+	clients      map[int]*clientHandler
+	requestc     chan (request)
+	closec       chan (bool)
+	hub          *hub
 }
 
 func Serve(addr string) (Server, error) {
@@ -32,11 +32,11 @@ func Serve(addr string) (Server, error) {
 	}
 
 	server := &server{
-		clients:       make(map[int]*clientHandler),
-		requestc:      make(chan (request), 1024),
-		closec:        make(chan (bool)),
-		subscriptions: newKeyTree(),
-		ln:            ln,
+		clients:  make(map[int]*clientHandler),
+		requestc: make(chan (request), 1024),
+		closec:   make(chan (bool)),
+		hub:      newHub(),
+		ln:       ln,
 	}
 
 	go server.run()
@@ -93,18 +93,18 @@ func (server *server) handleRequest(request request) {
 
 	switch message.meaning {
 	case MSG_TYPE_SUBSCRIBE:
-		server.subscriptions.subscribe(request.client, message.key)
+		server.hub.subscribe(request.client, message.key)
 		request.client.sendOK(message.requestId)
 		break
 	case MSG_TYPE_UNSUBSCRIBE:
-		server.subscriptions.unsubscribe(request.client, message.key)
+		server.hub.unsubscribe(request.client, message.key)
 		request.client.sendOK(message.requestId)
 		break
 	case MSG_TYPE_CLAIM:
 
 		break
 	case MSG_TYPE_PUBLISH:
-		server.subscriptions.publish(message.key, message.String(), false)
+		server.hub.publish(message.key, message.String())
 		request.client.sendOK(message.requestId)
 		break
 	default:
@@ -119,7 +119,7 @@ func (server *server) close() {
 }
 
 func (server *server) removeClient(client *clientHandler) {
-
+	server.hub.deleteSubscriber(client)
 }
 
 func (server *server) log(data interface{}) {
